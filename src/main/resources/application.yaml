@@ -1,3 +1,23 @@
 spring:
   application:
     name: TP2-DAAS
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/sistema_bancario?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: admin_banco
+    password: 46324039
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    # 'update' genera tablas si no existen sin intentar eliminar restricciones previas inexistentes
+    hibernate:
+      ddl-auto: update
+    defer-datasource-initialization: true # Mantiene la carga de data.sql tras crear/actualizar esquema
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  sql:
+    init:
+      mode: always # Mantiene la ejecución de data.sql al iniciar
