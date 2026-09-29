@@ -9,7 +9,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>ar.edu.unju.fi.arquitecturas</groupId>
-    <artifactId>TP2-DAAS</artifactId>
+    <artifactId>SistemaBancario</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>TP2-DAAS</name>
     <description>TP2-DAAS</description>

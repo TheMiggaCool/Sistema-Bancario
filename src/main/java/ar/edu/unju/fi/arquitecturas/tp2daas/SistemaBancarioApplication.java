@@ -6,10 +6,10 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 @EnableJpaAuditing
 @SpringBootApplication
-public class Tp2DaasApplication {
+public class SistemaBancarioApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(Tp2DaasApplication.class, args);
+        SpringApplication.run(SistemaBancarioApplication.class, args);
     }
 
 }
