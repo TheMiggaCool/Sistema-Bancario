@@ -14,7 +14,7 @@ import java.util.*;
 @Table(name = "cuentas_bancarias")
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED) // Definimos la estrategia de herencia
-public class CuentasFinancieras extends AuditableEntity{
+public class CuentaBancaria extends AuditableEntity{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -48,5 +48,5 @@ public class CuentasFinancieras extends AuditableEntity{
             },
             orphanRemoval = true
     )
-    private List<Transacciones> transacciones = new ArrayList<>();;
+    private List<Transaccion> transacciones = new ArrayList<>();;
 }

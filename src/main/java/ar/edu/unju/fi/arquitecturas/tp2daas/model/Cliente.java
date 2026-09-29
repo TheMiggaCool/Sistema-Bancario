@@ -46,5 +46,5 @@ public class Cliente {
             orphanRemoval = true
     )
     @Builder.Default
-    private List<CuentasFinancieras> cuentasFinancieras  = new ArrayList<>();
+    private List<CuentaBancaria> cuentasFinancieras  = new ArrayList<>();
 }

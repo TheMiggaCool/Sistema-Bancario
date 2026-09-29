@@ -13,7 +13,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 
 @Entity
-public class CuentaCorriente extends CuentasFinancieras{
+public class CuentaCorriente extends CuentaBancaria {
     private double margenAutorizado;
     private double costoMantenimiento;
 }

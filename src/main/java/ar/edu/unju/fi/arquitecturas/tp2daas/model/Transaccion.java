@@ -12,7 +12,7 @@ import java.util.Date;
 @Builder
 
 @Entity
-public class Transacciones {
+public class Transaccion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -34,5 +34,5 @@ public class Transacciones {
     // Relación transacciones n-1 cuenta
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "cuenta_financiera_id", nullable = false)
-    private CuentasFinancieras cuentaFinanciera;
+    private CuentaBancaria cuentaFinanciera;
 }
