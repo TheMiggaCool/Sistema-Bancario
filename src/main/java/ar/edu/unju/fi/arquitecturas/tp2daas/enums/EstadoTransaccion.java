@@ -1,4 +1,4 @@
-package ar.edu.unju.fi.arquitecturas.tp2daas.model;
+package ar.edu.unju.fi.arquitecturas.tp2daas.enums;
 
 public enum EstadoTransaccion {
     PENDIENTE,

@@ -1,4 +1,6 @@
 package ar.edu.unju.fi.arquitecturas.tp2daas.model;
+import ar.edu.unju.fi.arquitecturas.tp2daas.enums.EstadoTransaccion;
+import ar.edu.unju.fi.arquitecturas.tp2daas.enums.TipoTransaccion;
 import lombok.*;
 import jakarta.persistence.*;
 
