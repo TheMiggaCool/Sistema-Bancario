@@ -46,6 +46,6 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
      * @param id Identificador único del cliente.
      * @return {@link Optional} del cliente con la colección de cuentas inicializada.
      */
-    @Query("SELECT c FROM Cliente c LEFT JOIN FETCH c.cuentasFinancieras WHERE c.id = :id")
+    @Query("SELECT c FROM Cliente c LEFT JOIN FETCH c.cuentaBancaria WHERE c.id = :id")
     Optional<Cliente> findByIdWithCuentas(@Param("id") Long id);
 }

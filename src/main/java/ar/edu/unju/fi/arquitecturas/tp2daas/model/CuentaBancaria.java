@@ -40,7 +40,7 @@ public class CuentaBancaria extends AuditableEntity{
 
     // Relación cuenta 1-n transacciones
     @OneToMany(
-            mappedBy = "cuentaFinanciera",
+            mappedBy = "cuentaBancaria",
             fetch = FetchType.LAZY,
             cascade = {
                     CascadeType.MERGE,

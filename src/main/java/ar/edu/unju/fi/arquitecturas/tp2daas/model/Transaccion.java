@@ -33,6 +33,6 @@ public class Transaccion {
 
     // Relación transacciones n-1 cuenta
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "cuenta_financiera_id", nullable = false)
-    private CuentaBancaria cuentaFinanciera;
+    @JoinColumn(name = "cuenta_bancaria_id", nullable = false)
+    private CuentaBancaria cuentaBancaria;
 }
