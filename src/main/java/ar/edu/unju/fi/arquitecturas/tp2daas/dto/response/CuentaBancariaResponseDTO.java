@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CuentasFinancierasResponseDTO {
+public class CuentaBancariaResponseDTO {
 
     /**
      * Identificador único de la cuenta.
@@ -32,7 +32,7 @@ public class CuentasFinancierasResponseDTO {
     /**
      * Clave Bancaria Uniforme de la cuenta.
      */
-    private String cbu;
+    private String CBU;
 
     /**
      * Alias de la cuenta.

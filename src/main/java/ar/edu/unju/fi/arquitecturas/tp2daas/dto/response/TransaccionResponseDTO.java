@@ -14,7 +14,7 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class TransaccionesResponseDTO {
+public class TransaccionResponseDTO {
 
     /**
      * Identificador único de la transacción.
@@ -44,5 +44,5 @@ public class TransaccionesResponseDTO {
     /**
      * Identificador de la cuenta a la que pertenece la transacción.
      */
-    private Long cuentaFinancieraId;
+    private Long cuentaBancariaId;
 }

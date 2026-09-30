@@ -1,12 +1,17 @@
 package ar.edu.unju.fi.arquitecturas.tp2daas.service.impl;
 
+import ar.edu.unju.fi.arquitecturas.tp2daas.dto.request.ClienteRequestDTO;
+import ar.edu.unju.fi.arquitecturas.tp2daas.dto.response.ClienteResponseDTO;
 import ar.edu.unju.fi.arquitecturas.tp2daas.model.Cliente;
+import ar.edu.unju.fi.arquitecturas.tp2daas.model.CuentaBancaria;
 import ar.edu.unju.fi.arquitecturas.tp2daas.repository.ClienteRepository;
 import ar.edu.unju.fi.arquitecturas.tp2daas.service.ClienteService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -18,64 +23,104 @@ public class ClienteServiceImpl implements ClienteService {
 
     @Override
     @Transactional
-    public Cliente crearCliente(Cliente cliente) {
-        log.info("Iniciando proceso de creación de cliente con CUIL: {}", cliente.getCuil());
+    public ClienteResponseDTO crearCliente(ClienteRequestDTO request) {
+        log.info("Iniciando proceso de creación de cliente con CUIL: {}", request.getCuil());
 
-        if (clienteRepository.existsByCuilOrEmail(cliente.getCuil(), cliente.getEmail())) {
+        if (clienteRepository.existsByCuilOrEmail(request.getCuil(), request.getEmail())) {
             log.error("Fallo al crear cliente. Ya existe un registro con CUIL {} o Email {}",
-                    cliente.getCuil(), cliente.getEmail());
+                    request.getCuil(), request.getEmail());
             throw new IllegalArgumentException("Ya existe un cliente registrado con el mismo CUIL o Email.");
         }
 
-        Cliente clienteGuardado = clienteRepository.save(cliente);
+        Cliente cliente = Cliente.builder()
+                .cuil(request.getCuil())
+                .nombre(request.getNombre())
+                .email(request.getEmail())
+                .telefono(request.getTelefono())
+                .direccion(request.getDireccion())
+                .titularidad(request.getTitularidad())
+                .build();
 
+        Cliente clienteGuardado = clienteRepository.save(cliente);
         log.info("Cliente registrado exitosamente con ID: {}", clienteGuardado.getId());
-        return clienteGuardado;
+        return toResponse(clienteGuardado);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Cliente obtenerPorId(Long id) {
+    public ClienteResponseDTO obtenerPorId(Long id) {
         log.debug("Buscando cliente por ID: {}", id);
-        return clienteRepository.findById(id)
+        return clienteRepository.findByIdWithCuentas(id)
+                .map(this::toResponse)
                 .orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado con el ID: " + id));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Cliente obtenerPorCuil(String cuil) {
+    public ClienteResponseDTO obtenerPorCuil(String cuil) {
         log.debug("Buscando cliente por CUIL: {}", cuil);
-        return clienteRepository.findByCuil(cuil)
+        return clienteRepository.findByCuilWithCuentas(cuil)
+                .map(this::toResponse)
                 .orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado con el CUIL: " + cuil));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Cliente> listarTodos() {
+    public List<ClienteResponseDTO> listarTodos() {
         log.debug("Listando la totalidad de los clientes registrados");
-        return clienteRepository.findAll();
+        return clienteRepository.findAllWithCuentas().stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     @Override
     @Transactional
-    public Cliente actualizarCliente(Long id, Cliente clienteDetalles) {
+    public ClienteResponseDTO actualizarCliente(Long id, ClienteRequestDTO request) {
         log.info("Iniciando actualización de datos para el cliente con ID: {}", id);
 
-        Cliente clienteExistente = obtenerPorId(id);
+        Cliente clienteExistente = clienteRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado con el ID: " + id));
 
-        // Actualización selectiva de campos modificables del dominio
-        clienteExistente.setNombre(clienteDetalles.getNombre());
-        clienteExistente.setEmail(clienteDetalles.getEmail());
+        // Validación de email único excluyendo al cliente actual
+        if (request.getEmail() != null && !request.getEmail().equals(clienteExistente.getEmail())) {
+            if (clienteRepository.existsByEmailAndIdNot(request.getEmail(), id)) {
+                throw new IllegalArgumentException("Ya existe otro cliente registrado con el email: " + request.getEmail());
+            }
+            clienteExistente.setEmail(request.getEmail());
+        }
 
-        return clienteRepository.save(clienteExistente);
+        clienteExistente.setNombre(request.getNombre());
+        clienteExistente.setTelefono(request.getTelefono());
+        clienteExistente.setDireccion(request.getDireccion());
+        clienteExistente.setTitularidad(request.getTitularidad());
+
+        return toResponse(clienteRepository.save(clienteExistente));
     }
 
     @Override
     @Transactional
     public void eliminarPorId(Long id) {
         log.info("Solicitada la eliminación del cliente con ID: {}", id);
-        Cliente cliente = obtenerPorId(id);
+        Cliente cliente = clienteRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado con el ID: " + id));
         clienteRepository.delete(cliente);
         log.info("Cliente con ID {} eliminado correctamente", id);
+    }
+
+    private ClienteResponseDTO toResponse(Cliente cliente) {
+        List<Long> cuentasIds = cliente.getCuentaBancaria() != null
+                ? cliente.getCuentaBancaria().stream().map(CuentaBancaria::getId).toList()
+                : Collections.emptyList();
+
+        return ClienteResponseDTO.builder()
+                .id(cliente.getId())
+                .cuil(cliente.getCuil())
+                .nombre(cliente.getNombre())
+                .email(cliente.getEmail())
+                .telefono(cliente.getTelefono())
+                .direccion(cliente.getDireccion())
+                .titularidad(cliente.getTitularidad())
+                .cuentasIds(cuentasIds)
+                .build();
     }
 }

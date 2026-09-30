@@ -13,12 +13,12 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class TransaccionesRequestDTO {
+public class TransaccionRequestDTO {
 
     /**
      * Identificador de la cuenta sobre la que se opera (cuenta origen en una transferencia).
      */
-    private Long cuentaFinancieraId;
+    private Long cuentaBancariaId;
 
     /**
      * Tipo de operación. Las transferencias se solicitan como

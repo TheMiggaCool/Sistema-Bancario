@@ -1,16 +1,16 @@
 package ar.edu.unju.fi.arquitecturas.tp2daas.service.impl;
 
-import ar.edu.unju.fi.arquitecturas.tp2daas.dto.request.CuentasFinancierasRequestDTO;
-import ar.edu.unju.fi.arquitecturas.tp2daas.dto.response.CuentasFinancierasResponseDTO;
+import ar.edu.unju.fi.arquitecturas.tp2daas.dto.request.CuentaBancariaRequestDTO;
+import ar.edu.unju.fi.arquitecturas.tp2daas.dto.response.CuentaBancariaResponseDTO;
+import ar.edu.unju.fi.arquitecturas.tp2daas.enums.EstadoCuenta;
 import ar.edu.unju.fi.arquitecturas.tp2daas.enums.TipoCuenta;
 import ar.edu.unju.fi.arquitecturas.tp2daas.model.CajaDeAhorro;
 import ar.edu.unju.fi.arquitecturas.tp2daas.model.Cliente;
-import ar.edu.unju.fi.arquitecturas.tp2daas.model.CuentaCorriete;
-import ar.edu.unju.fi.arquitecturas.tp2daas.model.CuentasFinancieras;
-import ar.edu.unju.fi.arquitecturas.tp2daas.enums.EstadoCuenta;
+import ar.edu.unju.fi.arquitecturas.tp2daas.model.CuentaBancaria;
+import ar.edu.unju.fi.arquitecturas.tp2daas.model.CuentaCorriente;
 import ar.edu.unju.fi.arquitecturas.tp2daas.repository.ClienteRepository;
-import ar.edu.unju.fi.arquitecturas.tp2daas.repository.CuentasFinancierasRepository;
-import ar.edu.unju.fi.arquitecturas.tp2daas.service.CuentasFinancierasService;
+import ar.edu.unju.fi.arquitecturas.tp2daas.repository.CuentaBancariaRepository;
+import ar.edu.unju.fi.arquitecturas.tp2daas.service.CuentaBancariaService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,21 +21,22 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class CuentasFinancierasServiceImpl implements CuentasFinancierasService {
+public class CuentaBancariaServiceImpl implements CuentaBancariaService {
 
-    private final CuentasFinancierasRepository cuentasFinancierasRepository;
+    private final CuentaBancariaRepository cuentaBancariaRepository;
     private final ClienteRepository clienteRepository;
 
     @Override
     @Transactional
-    public CuentasFinancierasResponseDTO crearCuenta(CuentasFinancierasRequestDTO request) {
-        log.info("Iniciando proceso de creación de cuenta con CBU: {}", request.getCbu());
+    public CuentaBancariaResponseDTO crearCuenta(CuentaBancariaRequestDTO request) {
+        log.info("Iniciando proceso de creación de cuenta con CBU: {}", request.getCBU());
 
         validarDatosCreacion(request);
 
-        if (cuentasFinancierasRepository.existsByCbuOrAlias(request.getCbu(), request.getAlias())) {
+        // Se usa existsByCBUOrAlias para coincidir con el repositorio
+        if (cuentaBancariaRepository.existsByCBUOrAlias(request.getCBU(), request.getAlias())) {
             log.error("Fallo al crear cuenta. Ya existe un registro con CBU {} o Alias {}",
-                    request.getCbu(), request.getAlias());
+                    request.getCBU(), request.getAlias());
             throw new IllegalArgumentException("Ya existe una cuenta registrada con el mismo CBU o Alias.");
         }
 
@@ -43,8 +44,7 @@ public class CuentasFinancierasServiceImpl implements CuentasFinancierasService 
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Cliente no encontrado con el ID: " + request.getClienteId()));
 
-        // Se instancia la subclase correspondiente; los parámetros no informados quedan en cero
-        CuentasFinancieras cuenta = switch (request.getTipoCuenta()) {
+        CuentaBancaria cuenta = switch (request.getTipoCuenta()) {
             case CAJA_DE_AHORRO -> {
                 CajaDeAhorro cajaDeAhorro = new CajaDeAhorro();
                 cajaDeAhorro.setTasaInteres(request.getTasaInteres() != null ? request.getTasaInteres() : 0.0);
@@ -53,7 +53,7 @@ public class CuentasFinancierasServiceImpl implements CuentasFinancierasService 
                 yield cajaDeAhorro;
             }
             case CUENTA_CORRIENTE -> {
-                CuentaCorriete cuentaCorriente = new CuentaCorriete();
+                CuentaCorriente cuentaCorriente = new CuentaCorriente();
                 cuentaCorriente.setMargenAutorizado(
                         request.getMargenAutorizado() != null ? request.getMargenAutorizado() : 0.0);
                 cuentaCorriente.setCostoMantenimiento(
@@ -62,13 +62,13 @@ public class CuentasFinancierasServiceImpl implements CuentasFinancierasService 
             }
         };
 
-        cuenta.setCBU(request.getCbu());
+        cuenta.setCBU(request.getCBU());
         cuenta.setAlias(request.getAlias());
         cuenta.setSaldo(request.getSaldoInicial());
         cuenta.setEstado(EstadoCuenta.ACTIVA);
         cuenta.setCliente(cliente);
 
-        CuentasFinancieras cuentaGuardada = cuentasFinancierasRepository.save(cuenta);
+        CuentaBancaria cuentaGuardada = cuentaBancariaRepository.save(cuenta);
 
         log.info("Cuenta registrada exitosamente con ID: {}", cuentaGuardada.getId());
         return toResponse(cuentaGuardada);
@@ -76,54 +76,54 @@ public class CuentasFinancierasServiceImpl implements CuentasFinancierasService 
 
     @Override
     @Transactional(readOnly = true)
-    public CuentasFinancierasResponseDTO obtenerPorId(Long id) {
+    public CuentaBancariaResponseDTO obtenerPorId(Long id) {
         log.debug("Buscando cuenta por ID: {}", id);
         return toResponse(buscarEntidadPorId(id));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public CuentasFinancierasResponseDTO obtenerPorCbu(String cbu) {
-        log.debug("Buscando cuenta por CBU: {}", cbu);
-        return cuentasFinancierasRepository.findByCbu(cbu)
+    public CuentaBancariaResponseDTO obtenerPorCBU(String CBU) {
+        log.debug("Buscando cuenta por CBU: {}", CBU);
+        // Se usa findByCBU para coincidir con el repositorio
+        return cuentaBancariaRepository.findByCBU(CBU)
                 .map(this::toResponse)
-                .orElseThrow(() -> new IllegalArgumentException("Cuenta no encontrada con el CBU: " + cbu));
+                .orElseThrow(() -> new IllegalArgumentException("Cuenta no encontrada con el CBU: " + CBU));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<CuentasFinancierasResponseDTO> listarTodas() {
+    public List<CuentaBancariaResponseDTO> listarTodas() {
         log.debug("Listando la totalidad de las cuentas registradas");
-        return cuentasFinancierasRepository.findAll().stream()
+        return cuentaBancariaRepository.findAll().stream()
                 .map(this::toResponse)
                 .toList();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<CuentasFinancierasResponseDTO> listarPorCliente(Long clienteId) {
+    public List<CuentaBancariaResponseDTO> listarPorCliente(Long clienteId) {
         log.debug("Listando las cuentas del cliente con ID: {}", clienteId);
 
         if (!clienteRepository.existsById(clienteId)) {
             throw new IllegalArgumentException("Cliente no encontrado con el ID: " + clienteId);
         }
 
-        return cuentasFinancierasRepository.findByClienteId(clienteId).stream()
+        return cuentaBancariaRepository.findByClienteId(clienteId).stream()
                 .map(this::toResponse)
                 .toList();
     }
 
     @Override
     @Transactional
-    public CuentasFinancierasResponseDTO actualizarCuenta(Long id, CuentasFinancierasRequestDTO request) {
+    public CuentaBancariaResponseDTO actualizarCuenta(Long id, CuentaBancariaRequestDTO request) {
         log.info("Iniciando actualización de datos para la cuenta con ID: {}", id);
 
-        CuentasFinancieras cuentaExistente = buscarEntidadPorId(id);
+        CuentaBancaria cuentaExistente = buscarEntidadPorId(id);
 
-        // Actualización selectiva de campos modificables del dominio
         if (request.getAlias() != null && !request.getAlias().equals(cuentaExistente.getAlias())) {
             validarAlias(request.getAlias());
-            if (cuentasFinancierasRepository.existsByAliasAndIdNot(request.getAlias(), id)) {
+            if (cuentaBancariaRepository.existsByAliasAndIdNot(request.getAlias(), id)) {
                 log.error("Fallo al actualizar cuenta {}. El alias {} ya está en uso", id, request.getAlias());
                 throw new IllegalArgumentException("Ya existe una cuenta registrada con el mismo Alias.");
             }
@@ -139,7 +139,8 @@ public class CuentasFinancierasServiceImpl implements CuentasFinancierasService 
             if (request.getExtraccionesSinCosto() != null) {
                 cajaDeAhorro.setExtraccionesSinCosto(request.getExtraccionesSinCosto());
             }
-        } else if (cuentaExistente instanceof CuentaCorriete cuentaCorriente) {
+            // Corrección del typo CuentaCorriete -> CuentaCorriente
+        } else if (cuentaExistente instanceof CuentaCorriente cuentaCorriente) {
             if (request.getMargenAutorizado() != null) {
                 cuentaCorriente.setMargenAutorizado(request.getMargenAutorizado());
             }
@@ -148,52 +149,50 @@ public class CuentasFinancierasServiceImpl implements CuentasFinancierasService 
             }
         }
 
-        return toResponse(cuentasFinancierasRepository.save(cuentaExistente));
+        return toResponse(cuentaBancariaRepository.save(cuentaExistente));
     }
 
     @Override
     @Transactional
-    public CuentasFinancierasResponseDTO cambiarEstado(Long id, EstadoCuenta nuevoEstado) {
+    public CuentaBancariaResponseDTO cambiarEstado(Long id, EstadoCuenta nuevoEstado) {
         log.info("Solicitado el cambio de estado de la cuenta con ID {} a {}", id, nuevoEstado);
 
         if (nuevoEstado == null) {
             throw new IllegalArgumentException("El nuevo estado de la cuenta es obligatorio.");
         }
 
-        CuentasFinancieras cuenta = buscarEntidadPorId(id);
+        CuentaBancaria cuenta = buscarEntidadPorId(id);
         cuenta.setEstado(nuevoEstado);
 
-        return toResponse(cuentasFinancierasRepository.save(cuenta));
+        return toResponse(cuentaBancariaRepository.save(cuenta));
     }
 
     @Override
     @Transactional
     public void eliminarPorId(Long id) {
         log.info("Solicitada la eliminación de la cuenta con ID: {}", id);
-        CuentasFinancieras cuenta = buscarEntidadPorId(id);
-        cuentasFinancierasRepository.delete(cuenta);
+        CuentaBancaria cuenta = buscarEntidadPorId(id);
+        cuentaBancariaRepository.delete(cuenta);
         log.info("Cuenta con ID {} eliminada correctamente", id);
     }
 
-    /*
-       ------------------------------------------------------------------
-       Métodos auxiliares
-       ------------------------------------------------------------------
-    */
+    // ==========================================
+    // Métodos auxiliares
+    // ==========================================
 
-    private CuentasFinancieras buscarEntidadPorId(Long id) {
-        return cuentasFinancierasRepository.findById(id)
+    private CuentaBancaria buscarEntidadPorId(Long id) {
+        return cuentaBancariaRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Cuenta no encontrada con el ID: " + id));
     }
 
-    private void validarDatosCreacion(CuentasFinancierasRequestDTO request) {
+    private void validarDatosCreacion(CuentaBancariaRequestDTO request) {
         if (request.getClienteId() == null) {
             throw new IllegalArgumentException("El ID del cliente titular es obligatorio.");
         }
         if (request.getTipoCuenta() == null) {
             throw new IllegalArgumentException("El tipo de cuenta es obligatorio.");
         }
-        if (request.getCbu() == null || !request.getCbu().matches("\\d{22}")) {
+        if (request.getCBU() == null || !request.getCBU().matches("\\d{22}")) {
             throw new IllegalArgumentException("El CBU debe contener exactamente 22 dígitos numéricos.");
         }
         validarAlias(request.getAlias());
@@ -212,7 +211,7 @@ public class CuentasFinancierasServiceImpl implements CuentasFinancierasService 
         }
     }
 
-    private void validarParametrosNoNegativos(CuentasFinancierasRequestDTO request) {
+    private void validarParametrosNoNegativos(CuentaBancariaRequestDTO request) {
         validarNoNegativo(request.getTasaInteres(), "tasa de interés");
         validarNoNegativo(request.getExtraccionesSinCosto(), "cantidad de extracciones sin costo");
         validarNoNegativo(request.getMargenAutorizado(), "margen autorizado");
@@ -225,10 +224,10 @@ public class CuentasFinancierasServiceImpl implements CuentasFinancierasService 
         }
     }
 
-    private CuentasFinancierasResponseDTO toResponse(CuentasFinancieras cuenta) {
-        CuentasFinancierasResponseDTO dto = CuentasFinancierasResponseDTO.builder()
+    private CuentaBancariaResponseDTO toResponse(CuentaBancaria cuenta) {
+        CuentaBancariaResponseDTO dto = CuentaBancariaResponseDTO.builder()
                 .id(cuenta.getId())
-                .cbu(cuenta.getCBU())
+                .CBU(cuenta.getCBU())
                 .alias(cuenta.getAlias())
                 .saldo(cuenta.getSaldo())
                 .estado(cuenta.getEstado())
@@ -241,7 +240,8 @@ public class CuentasFinancierasServiceImpl implements CuentasFinancierasService 
             dto.setTipoCuenta(TipoCuenta.CAJA_DE_AHORRO);
             dto.setTasaInteres(cajaDeAhorro.getTasaInteres());
             dto.setExtraccionesSinCosto(cajaDeAhorro.getExtraccionesSinCosto());
-        } else if (cuenta instanceof CuentaCorriete cuentaCorriente) {
+            // Corrección del typo CuentaCorriete -> CuentaCorriente
+        } else if (cuenta instanceof CuentaCorriente cuentaCorriente) {
             dto.setTipoCuenta(TipoCuenta.CUENTA_CORRIENTE);
             dto.setMargenAutorizado(cuentaCorriente.getMargenAutorizado());
             dto.setCostoMantenimiento(cuentaCorriente.getCostoMantenimiento());

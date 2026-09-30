@@ -71,7 +71,7 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
      * @param cuil Clave Única de Identificación Laboral / Tributaria.
      * @return {@link Optional} del cliente con la colección de cuentas inicializada.
      */
-    @Query("SELECT c FROM Cliente c LEFT JOIN FETCH c.cuentasFinancieras WHERE c.cuil = :cuil")
+    @Query("SELECT c FROM Cliente c LEFT JOIN FETCH c.cuentaBancaria WHERE c.cuil = :cuil")
     Optional<Cliente> findByCuilWithCuentas(@Param("cuil") String cuil);
 
     /**
@@ -80,6 +80,6 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
      *
      * @return {@link List} con todos los clientes y sus cuentas inicializadas; vacía si no hay registros.
      */
-    @Query("SELECT DISTINCT c FROM Cliente c LEFT JOIN FETCH c.cuentasFinancieras")
+    @Query("SELECT DISTINCT c FROM Cliente c LEFT JOIN FETCH c.cuentaBancaria")
     List<Cliente> findAllWithCuentas();
 }

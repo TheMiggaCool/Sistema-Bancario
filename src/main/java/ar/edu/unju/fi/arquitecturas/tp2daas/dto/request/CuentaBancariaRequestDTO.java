@@ -15,7 +15,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CuentasFinancierasRequestDTO {
+public class CuentaBancariaRequestDTO {
 
     /**
      * Identificador del cliente titular de la cuenta (solo en la creación).
@@ -30,7 +30,7 @@ public class CuentasFinancierasRequestDTO {
     /**
      * Clave Bancaria Uniforme de 22 dígitos (solo en la creación).
      */
-    private String cbu;
+    private String CBU;
 
     /**
      * Alias único de la cuenta.
