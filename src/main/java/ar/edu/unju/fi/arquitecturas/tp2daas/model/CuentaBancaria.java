@@ -1,5 +1,6 @@
 package ar.edu.unju.fi.arquitecturas.tp2daas.model;
 
+import ar.edu.unju.fi.arquitecturas.tp2daas.enums.EstadoCuenta;
 import lombok.*;
 import jakarta.persistence.*;
 import lombok.experimental.SuperBuilder;
