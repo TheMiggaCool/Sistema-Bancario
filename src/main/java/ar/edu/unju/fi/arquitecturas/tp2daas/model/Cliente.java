@@ -11,7 +11,7 @@ import java.util.*;
 @Table (name = "clientes")
 
 @Entity
-public class Cliente {
+public class Cliente extends AuditableEntity{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

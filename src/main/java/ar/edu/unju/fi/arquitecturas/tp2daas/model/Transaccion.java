@@ -14,7 +14,7 @@ import java.util.Date;
 @Builder
 
 @Entity
-public class Transaccion {
+public class Transaccion extends AuditableEntity{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
