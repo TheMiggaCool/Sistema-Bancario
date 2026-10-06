@@ -1,0 +1,50 @@
+### =========================================================================
+### 1. Registrar un nuevo cliente (POST /api/v1/clientes) -> Esperado: 201 CREATED
+### =========================================================================
+POST http://localhost:8080/api/v1/clientes
+Content-Type: application/json
+
+{
+  "cuil": "20445556661",
+  "nombre": "Esteban Quispe",
+  "email": "esteban.quispe@email.com",
+  "telefono": "3884123987",
+  "direccion": "Av. Fascio 850, San Salvador de Jujuy",
+  "titularidad": "Titular"
+}
+
+### =========================================================================
+### 2. Apertura de cuenta bancaria (POST /api/v1/cuentas) -> Esperado: 201 CREATED
+### =========================================================================
+POST http://localhost:8080/api/v1/cuentas
+Content-Type: application/json
+
+{
+  "clienteId": 1,
+  "tipoCuenta": "CAJA_DE_AHORRO",
+  "cbu": "0000003100000000000099",
+  "alias": "ESTEBAN.AHORRO.JUJUY",
+  "saldoInicial": 50000.0,
+  "tasaInteres": 35.0,
+  "extraccionesSinCosto": 5
+}
+
+### =========================================================================
+### 3. Consultar saldo y detalle por CBU (GET /api/v1/cuentas/{cbu}) -> Esperado: 200 OK
+### =========================================================================
+GET http://localhost:8080/api/v1/cuentas/0000003100000000000001
+Accept: application/json
+
+### =========================================================================
+### 4. Ejecutar transferencia (POST /api/v1/transacciones/transferir) -> Esperado: 200 OK
+### Transfiere desde cuenta 1 ($150.000) a cuenta 2 ($85.000)
+### =========================================================================
+POST http://localhost:8080/api/v1/transacciones/transferir
+Content-Type: application/json
+
+{
+  "cuentaBancariaId": 1,
+  "cuentaDestinoId": 2,
+  "tipo": "TRANSFERENCIA_ENVIADA",
+  "monto": 15000.0
+}
