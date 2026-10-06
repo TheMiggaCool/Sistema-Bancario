@@ -1,4 +1,4 @@
-package ar.edu.unju.fi.arquitecturas.tp2daas.service;
+package ar.edu.unju.fi.arquitecturas.tp2daas.service.interfaces;
 
 import ar.edu.unju.fi.arquitecturas.tp2daas.dto.request.ClienteRequestDTO;
 import ar.edu.unju.fi.arquitecturas.tp2daas.dto.response.ClienteResponseDTO;
