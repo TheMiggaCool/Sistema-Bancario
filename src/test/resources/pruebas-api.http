@@ -22,7 +22,7 @@ Content-Type: application/json
 {
   "clienteId": 1,
   "tipoCuenta": "CAJA_DE_AHORRO",
-  "cbu": "0000003100000000000099",
+  "CBU": "0000003100000000000099",
   "alias": "ESTEBAN.AHORRO.JUJUY",
   "saldoInicial": 50000.0,
   "tasaInteres": 35.0,
