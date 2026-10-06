@@ -1,0 +1,23 @@
+$kind: http-request
+url: http://localhost:8080/api/v1/cuentas
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \  \"clienteId\": 12,\r
+
+    \  \"tipoCuenta\": \"CAJA_DE_AHORRO\",\r
+
+    \  \"cbu\": \"0000003100000000000099\",\r
+
+    \  \"alias\": \"ERNESTO.AHORRO.JUJUY\",\r
+
+    \  \"saldoInicial\": 50000.0,\r
+
+    \  \"tasaInteres\": 35.0,\r
+
+    \  \"extraccionesSinCosto\": 5\r
+
+    }"
+order: 1786103236187779

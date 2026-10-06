@@ -1,0 +1,21 @@
+$kind: http-request
+url: http://localhost:8080/api/v1/clientes
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \    \"cuil\": \"01928491087\",\r
+
+    \    \"nombre\": \"Ernesto\",\r
+
+    \    \"email\": \"ernesto198k@gmail.com\",\r
+
+    \    \"telefono\": \"3881798248\",\r
+
+    \    \"direccion\": \"Belgrano 355, San Salvador de Jujuy\",\r
+
+    \    \"titularidad\": \"Titular\" \r
+
+    }"
+order: 1791324000544
