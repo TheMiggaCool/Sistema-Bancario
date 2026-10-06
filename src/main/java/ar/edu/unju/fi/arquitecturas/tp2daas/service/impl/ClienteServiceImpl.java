@@ -2,10 +2,12 @@ package ar.edu.unju.fi.arquitecturas.tp2daas.service.impl;
 
 import ar.edu.unju.fi.arquitecturas.tp2daas.dto.request.ClienteRequestDTO;
 import ar.edu.unju.fi.arquitecturas.tp2daas.dto.response.ClienteResponseDTO;
+import ar.edu.unju.fi.arquitecturas.tp2daas.exceptions.RecursoNoEncontradoException;
+import ar.edu.unju.fi.arquitecturas.tp2daas.exceptions.RecursoYaExistenteException;
 import ar.edu.unju.fi.arquitecturas.tp2daas.model.Cliente;
 import ar.edu.unju.fi.arquitecturas.tp2daas.model.CuentaBancaria;
 import ar.edu.unju.fi.arquitecturas.tp2daas.repository.ClienteRepository;
-import ar.edu.unju.fi.arquitecturas.tp2daas.service.ClienteService;
+import ar.edu.unju.fi.arquitecturas.tp2daas.service.interfaces.ClienteService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -29,7 +31,7 @@ public class ClienteServiceImpl implements ClienteService {
         if (clienteRepository.existsByCuilOrEmail(request.getCuil(), request.getEmail())) {
             log.error("Fallo al crear cliente. Ya existe un registro con CUIL {} o Email {}",
                     request.getCuil(), request.getEmail());
-            throw new IllegalArgumentException("Ya existe un cliente registrado con el mismo CUIL o Email.");
+            throw new RecursoYaExistenteException("Ya existe un cliente registrado con el mismo CUIL o Email.");
         }
 
         Cliente cliente = Cliente.builder()
@@ -52,7 +54,7 @@ public class ClienteServiceImpl implements ClienteService {
         log.debug("Buscando cliente por ID: {}", id);
         return clienteRepository.findByIdWithCuentas(id)
                 .map(this::toResponse)
-                .orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado con el ID: " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Cliente no encontrado con el ID: " + id));
     }
 
     @Override
@@ -61,7 +63,7 @@ public class ClienteServiceImpl implements ClienteService {
         log.debug("Buscando cliente por CUIL: {}", cuil);
         return clienteRepository.findByCuilWithCuentas(cuil)
                 .map(this::toResponse)
-                .orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado con el CUIL: " + cuil));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Cliente no encontrado con el CUIL: " + cuil));
     }
 
     @Override
@@ -79,12 +81,12 @@ public class ClienteServiceImpl implements ClienteService {
         log.info("Iniciando actualización de datos para el cliente con ID: {}", id);
 
         Cliente clienteExistente = clienteRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado con el ID: " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Cliente no encontrado con el ID: " + id));
 
         // Validación de email único excluyendo al cliente actual
         if (request.getEmail() != null && !request.getEmail().equals(clienteExistente.getEmail())) {
             if (clienteRepository.existsByEmailAndIdNot(request.getEmail(), id)) {
-                throw new IllegalArgumentException("Ya existe otro cliente registrado con el email: " + request.getEmail());
+                throw new RecursoYaExistenteException("Ya existe otro cliente registrado con el email: " + request.getEmail());
             }
             clienteExistente.setEmail(request.getEmail());
         }
@@ -102,7 +104,7 @@ public class ClienteServiceImpl implements ClienteService {
     public void eliminarPorId(Long id) {
         log.info("Solicitada la eliminación del cliente con ID: {}", id);
         Cliente cliente = clienteRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado con el ID: " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Cliente no encontrado con el ID: " + id));
         clienteRepository.delete(cliente);
         log.info("Cliente con ID {} eliminado correctamente", id);
     }

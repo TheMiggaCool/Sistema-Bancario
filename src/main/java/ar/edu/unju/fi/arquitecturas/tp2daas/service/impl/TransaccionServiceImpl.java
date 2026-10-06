@@ -2,6 +2,9 @@ package ar.edu.unju.fi.arquitecturas.tp2daas.service.impl;
 
 import ar.edu.unju.fi.arquitecturas.tp2daas.dto.request.TransaccionRequestDTO;
 import ar.edu.unju.fi.arquitecturas.tp2daas.dto.response.TransaccionResponseDTO;
+import ar.edu.unju.fi.arquitecturas.tp2daas.exceptions.OperacionNoPermitidaException;
+import ar.edu.unju.fi.arquitecturas.tp2daas.exceptions.RecursoNoEncontradoException;
+import ar.edu.unju.fi.arquitecturas.tp2daas.exceptions.SaldoInsuficienteException;
 import ar.edu.unju.fi.arquitecturas.tp2daas.model.CuentaBancaria;
 import ar.edu.unju.fi.arquitecturas.tp2daas.model.CuentaCorriente;
 import ar.edu.unju.fi.arquitecturas.tp2daas.enums.EstadoCuenta;
@@ -10,7 +13,7 @@ import ar.edu.unju.fi.arquitecturas.tp2daas.enums.TipoTransaccion;
 import ar.edu.unju.fi.arquitecturas.tp2daas.model.Transaccion;
 import ar.edu.unju.fi.arquitecturas.tp2daas.repository.CuentaBancariaRepository;
 import ar.edu.unju.fi.arquitecturas.tp2daas.repository.TransaccionRepository;
-import ar.edu.unju.fi.arquitecturas.tp2daas.service.TransaccionService;
+import ar.edu.unju.fi.arquitecturas.tp2daas.service.interfaces.TransaccionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -32,7 +35,7 @@ public class TransaccionServiceImpl implements TransaccionService {
     @Transactional
     public TransaccionResponseDTO registrarTransaccion(TransaccionRequestDTO request) {
         log.info("Iniciando registro de transacción tipo {} por monto {} en cuenta ID: {}",
-                request.getTipo(), request.getMonto(), request.getCuentaBancariaId());
+                request.getTipo(), request.getMonto(), request.getCbuOrigen());
 
         validarDatosTransaccion(request);
 
@@ -40,7 +43,7 @@ public class TransaccionServiceImpl implements TransaccionService {
             case DEPOSITO -> registrarDeposito(request);
             case EXTRACCION -> registrarExtraccion(request);
             case TRANSFERENCIA_ENVIADA -> registrarTransferencia(request);
-            case TRANSFERENCIA_RECIBIDA -> throw new IllegalArgumentException(
+            case TRANSFERENCIA_RECIBIDA -> throw new OperacionNoPermitidaException(
                     "Las transferencias recibidas se generan automáticamente al procesar una transferencia enviada.");
         };
     }
@@ -76,7 +79,7 @@ public class TransaccionServiceImpl implements TransaccionService {
         log.debug("Listando transacciones de tipo {} para cuenta ID: {}", tipo, cuentaId);
         validarExistenciaCuenta(cuentaId);
         if (tipo == null) {
-            throw new IllegalArgumentException("El tipo de transacción es obligatorio.");
+            throw new OperacionNoPermitidaException("El tipo de transacción es obligatorio.");
         }
         return transaccionRepository.findByCuentaBancariaIdAndTipo(cuentaId, tipo, pageable)
                 .map(this::toResponse);
@@ -88,7 +91,7 @@ public class TransaccionServiceImpl implements TransaccionService {
         log.debug("Listando transacciones en estado {} para cuenta ID: {}", estado, cuentaId);
         validarExistenciaCuenta(cuentaId);
         if (estado == null) {
-            throw new IllegalArgumentException("El estado de la transacción es obligatorio.");
+            throw new OperacionNoPermitidaException("El estado de la transacción es obligatorio.");
         }
         return transaccionRepository.findByCuentaBancariaIdAndEstado(cuentaId, estado, pageable)
                 .map(this::toResponse);
@@ -100,10 +103,10 @@ public class TransaccionServiceImpl implements TransaccionService {
         log.debug("Listando transacciones de cuenta ID: {} entre {} y {}", cuentaId, desde, hasta);
         validarExistenciaCuenta(cuentaId);
         if (desde == null || hasta == null) {
-            throw new IllegalArgumentException("Las fechas de inicio y fin del rango son obligatorias.");
+            throw new OperacionNoPermitidaException("Las fechas de inicio y fin del rango son obligatorias.");
         }
         if (desde.after(hasta)) {
-            throw new IllegalArgumentException("La fecha de inicio no puede ser posterior a la fecha de fin.");
+            throw new OperacionNoPermitidaException("La fecha de inicio no puede ser posterior a la fecha de fin.");
         }
         return transaccionRepository.findByCuentaBancariaIdAndFechaBetween(cuentaId, desde, hasta, pageable)
                 .map(this::toResponse);
@@ -114,7 +117,7 @@ public class TransaccionServiceImpl implements TransaccionService {
     // ==========================================
 
     private TransaccionResponseDTO registrarDeposito(TransaccionRequestDTO request) {
-        CuentaBancaria cuenta = obtenerCuentaActivaBloqueada(request.getCuentaBancariaId());
+        CuentaBancaria cuenta = obtenerCuentaActivaBloqueada(request.getCbuOrigen());
 
         cuenta.setSaldo(cuenta.getSaldo() + request.getMonto());
         cuentaBancariaRepository.save(cuenta);
@@ -125,7 +128,7 @@ public class TransaccionServiceImpl implements TransaccionService {
     }
 
     private TransaccionResponseDTO registrarExtraccion(TransaccionRequestDTO request) {
-        CuentaBancaria cuenta = obtenerCuentaActivaBloqueada(request.getCuentaBancariaId());
+        CuentaBancaria cuenta = obtenerCuentaActivaBloqueada(request.getCbuOrigen());
 
         validarFondosSuficientes(cuenta, request.getMonto());
 
@@ -138,26 +141,28 @@ public class TransaccionServiceImpl implements TransaccionService {
     }
 
     private TransaccionResponseDTO registrarTransferencia(TransaccionRequestDTO request) {
-        Long origenId = request.getCuentaBancariaId();
-        Long destinoId = request.getCuentaDestinoId();
+        String cbuOrigen = request.getCbuOrigen();
+        String cbuDestino = request.getCbuDestino();
 
-        if (destinoId == null) {
-            throw new IllegalArgumentException("La cuenta destino es obligatoria para realizar una transferencia.");
+        if (cbuDestino.isBlank() || cbuDestino.isBlank()) {
+            throw new OperacionNoPermitidaException("La cuenta destino es obligatoria para realizar una transferencia.");
         }
-        if (origenId.equals(destinoId)) {
-            throw new IllegalArgumentException("La cuenta de origen y destino no pueden ser la misma.");
+        if (cbuOrigen.equals(cbuDestino)) {
+            throw new OperacionNoPermitidaException("La cuenta de origen y destino no pueden ser la misma.");
         }
 
-        // Bloqueo pesimista en orden ascendente de ID para evitar deadlocks en concurrencia
-        CuentaBancaria origen;
-        CuentaBancaria destino;
-        if (origenId < destinoId) {
-            origen = obtenerCuentaActivaBloqueada(origenId);
-            destino = obtenerCuentaActivaBloqueada(destinoId);
+        CuentaBancaria origen = obtenerCuentaActivaBloqueada(cbuOrigen);
+        CuentaBancaria destino = obtenerCuentaActivaBloqueada(cbuDestino);
+
+        /*
+        if (cbuOrigen.compareToFoldCase(cbuDestino) > 0) {
+            origen = obtenerCuentaActivaBloqueada(cbuOrigen);
+            destino = obtenerCuentaActivaBloqueada(cbuDestino);
         } else {
-            destino = obtenerCuentaActivaBloqueada(destinoId);
-            origen = obtenerCuentaActivaBloqueada(origenId);
+            destino = obtenerCuentaActivaBloqueada(cbuDestino);
+            origen = obtenerCuentaActivaBloqueada(cbuOrigen);
         }
+         */
 
         validarFondosSuficientes(origen, request.getMonto());
 
@@ -179,30 +184,30 @@ public class TransaccionServiceImpl implements TransaccionService {
     // ==========================================
 
     private void validarDatosTransaccion(TransaccionRequestDTO request) {
-        if (request.getCuentaBancariaId() == null) {
-            throw new IllegalArgumentException("El ID de la cuenta es obligatorio.");
+        if (request.getCbuOrigen() == null) {
+            throw new RecursoNoEncontradoException("El ID de la cuenta es obligatorio.");
         }
         if (request.getTipo() == null) {
-            throw new IllegalArgumentException("El tipo de transacción es obligatorio.");
+            throw new OperacionNoPermitidaException("El tipo de transacción es obligatorio.");
         }
         if (!(request.getMonto() > 0) || Double.isInfinite(request.getMonto())) {
-            throw new IllegalArgumentException("El monto de la transacción debe ser mayor a cero.");
+            throw new SaldoInsuficienteException("El monto de la transacción debe ser mayor a cero.");
         }
     }
 
     private void validarExistenciaCuenta(Long cuentaId) {
         if (cuentaId == null || !cuentaBancariaRepository.existsById(cuentaId)) {
-            throw new IllegalArgumentException("Cuenta no encontrada con el ID: " + cuentaId);
+            throw new RecursoNoEncontradoException("Cuenta no encontrada con el ID: " + cuentaId);
         }
     }
 
-    private CuentaBancaria obtenerCuentaActivaBloqueada(Long cuentaId) {
-        CuentaBancaria cuenta = cuentaBancariaRepository.findByIdForUpdate(cuentaId)
-                .orElseThrow(() -> new IllegalArgumentException("Cuenta no encontrada con el ID: " + cuentaId));
+    private CuentaBancaria obtenerCuentaActivaBloqueada(String cbu) {
+        CuentaBancaria cuenta = cuentaBancariaRepository.findByCBU(cbu)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Cuenta no encontrada con el CBU: " + cbu));
 
         if (cuenta.getEstado() != EstadoCuenta.ACTIVA) {
-            log.error("Operación rechazada. La cuenta {} se encuentra {}", cuentaId, cuenta.getEstado());
-            throw new IllegalStateException("La cuenta con ID " + cuentaId
+            log.error("Operación rechazada. La cuenta {} se encuentra {}", cbu, cuenta.getEstado());
+            throw new OperacionNoPermitidaException("La cuenta con ID " + cbu
                     + " no puede operar porque se encuentra " + cuenta.getEstado() + ".");
         }
         return cuenta;
@@ -216,7 +221,7 @@ public class TransaccionServiceImpl implements TransaccionService {
         if (monto > disponible) {
             log.error("Fondos insuficientes en la cuenta {}. Disponible: {}, requerido: {}",
                     cuenta.getId(), disponible, monto);
-            throw new IllegalStateException("Fondos insuficientes en la cuenta con ID " + cuenta.getId() + ".");
+            throw new SaldoInsuficienteException("Fondos insuficientes en la cuenta con ID " + cuenta.getId() + ".");
         }
     }
 

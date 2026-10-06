@@ -4,13 +4,16 @@ import ar.edu.unju.fi.arquitecturas.tp2daas.dto.request.CuentaBancariaRequestDTO
 import ar.edu.unju.fi.arquitecturas.tp2daas.dto.response.CuentaBancariaResponseDTO;
 import ar.edu.unju.fi.arquitecturas.tp2daas.enums.EstadoCuenta;
 import ar.edu.unju.fi.arquitecturas.tp2daas.enums.TipoCuenta;
+import ar.edu.unju.fi.arquitecturas.tp2daas.exceptions.OperacionNoPermitidaException;
+import ar.edu.unju.fi.arquitecturas.tp2daas.exceptions.RecursoNoEncontradoException;
+import ar.edu.unju.fi.arquitecturas.tp2daas.exceptions.RecursoYaExistenteException;
 import ar.edu.unju.fi.arquitecturas.tp2daas.model.CajaDeAhorro;
 import ar.edu.unju.fi.arquitecturas.tp2daas.model.Cliente;
 import ar.edu.unju.fi.arquitecturas.tp2daas.model.CuentaBancaria;
 import ar.edu.unju.fi.arquitecturas.tp2daas.model.CuentaCorriente;
 import ar.edu.unju.fi.arquitecturas.tp2daas.repository.ClienteRepository;
 import ar.edu.unju.fi.arquitecturas.tp2daas.repository.CuentaBancariaRepository;
-import ar.edu.unju.fi.arquitecturas.tp2daas.service.CuentaBancariaService;
+import ar.edu.unju.fi.arquitecturas.tp2daas.service.interfaces.CuentaBancariaService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -37,7 +40,7 @@ public class CuentaBancariaServiceImpl implements CuentaBancariaService {
         if (cuentaBancariaRepository.existsByCBUOrAlias(request.getCBU(), request.getAlias())) {
             log.error("Fallo al crear cuenta. Ya existe un registro con CBU {} o Alias {}",
                     request.getCBU(), request.getAlias());
-            throw new IllegalArgumentException("Ya existe una cuenta registrada con el mismo CBU o Alias.");
+            throw new RecursoYaExistenteException("Ya existe una cuenta registrada con el mismo CBU o Alias.");
         }
 
         Cliente cliente = clienteRepository.findById(request.getClienteId())
@@ -106,7 +109,7 @@ public class CuentaBancariaServiceImpl implements CuentaBancariaService {
         log.debug("Listando las cuentas del cliente con ID: {}", clienteId);
 
         if (!clienteRepository.existsById(clienteId)) {
-            throw new IllegalArgumentException("Cliente no encontrado con el ID: " + clienteId);
+            throw new RecursoNoEncontradoException("Cliente no encontrado con el ID: " + clienteId);
         }
 
         return cuentaBancariaRepository.findByClienteId(clienteId).stream()
@@ -125,7 +128,7 @@ public class CuentaBancariaServiceImpl implements CuentaBancariaService {
             validarAlias(request.getAlias());
             if (cuentaBancariaRepository.existsByAliasAndIdNot(request.getAlias(), id)) {
                 log.error("Fallo al actualizar cuenta {}. El alias {} ya está en uso", id, request.getAlias());
-                throw new IllegalArgumentException("Ya existe una cuenta registrada con el mismo Alias.");
+                throw new RecursoYaExistenteException("Ya existe una cuenta registrada con el mismo Alias.");
             }
             cuentaExistente.setAlias(request.getAlias());
         }
@@ -158,7 +161,7 @@ public class CuentaBancariaServiceImpl implements CuentaBancariaService {
         log.info("Solicitado el cambio de estado de la cuenta con ID {} a {}", id, nuevoEstado);
 
         if (nuevoEstado == null) {
-            throw new IllegalArgumentException("El nuevo estado de la cuenta es obligatorio.");
+            throw new OperacionNoPermitidaException("El nuevo estado de la cuenta es obligatorio.");
         }
 
         CuentaBancaria cuenta = buscarEntidadPorId(id);
@@ -187,27 +190,27 @@ public class CuentaBancariaServiceImpl implements CuentaBancariaService {
 
     private void validarDatosCreacion(CuentaBancariaRequestDTO request) {
         if (request.getClienteId() == null) {
-            throw new IllegalArgumentException("El ID del cliente titular es obligatorio.");
+            throw new OperacionNoPermitidaException("El ID del cliente titular es obligatorio.");
         }
         if (request.getTipoCuenta() == null) {
-            throw new IllegalArgumentException("El tipo de cuenta es obligatorio.");
+            throw new OperacionNoPermitidaException("El tipo de cuenta es obligatorio.");
         }
         if (request.getCBU() == null || !request.getCBU().matches("\\d{22}")) {
-            throw new IllegalArgumentException("El CBU debe contener exactamente 22 dígitos numéricos.");
+            throw new OperacionNoPermitidaException("El CBU debe contener exactamente 22 dígitos numéricos.");
         }
         validarAlias(request.getAlias());
         if (request.getSaldoInicial() < 0) {
-            throw new IllegalArgumentException("El saldo inicial no puede ser negativo.");
+            throw new OperacionNoPermitidaException("El saldo inicial no puede ser negativo.");
         }
         validarParametrosNoNegativos(request);
     }
 
     private void validarAlias(String alias) {
         if (alias == null || alias.isBlank()) {
-            throw new IllegalArgumentException("El alias es obligatorio.");
+            throw new OperacionNoPermitidaException("El alias es obligatorio.");
         }
         if (alias.length() > 50) {
-            throw new IllegalArgumentException("El alias no puede superar los 50 caracteres.");
+            throw new OperacionNoPermitidaException("El alias no puede superar los 50 caracteres.");
         }
     }
 
@@ -220,7 +223,7 @@ public class CuentaBancariaServiceImpl implements CuentaBancariaService {
 
     private void validarNoNegativo(Number valor, String campo) {
         if (valor != null && valor.doubleValue() < 0) {
-            throw new IllegalArgumentException("El valor de " + campo + " no puede ser negativo.");
+            throw new OperacionNoPermitidaException("El valor de " + campo + " no puede ser negativo.");
         }
     }
 
