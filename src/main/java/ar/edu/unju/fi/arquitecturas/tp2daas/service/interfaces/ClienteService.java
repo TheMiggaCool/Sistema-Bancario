@@ -18,4 +18,6 @@ public interface ClienteService {
     ClienteResponseDTO actualizarCliente(Long id, ClienteRequestDTO request);
 
     void eliminarPorId(Long id);
+
+    void activarCliente(String token);
 }
