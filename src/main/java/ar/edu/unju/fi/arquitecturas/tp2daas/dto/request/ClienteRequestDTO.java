@@ -45,4 +45,9 @@ public class ClienteRequestDTO {
      * Titularidad del cliente.
      */
     private String titularidad;
+
+    /**
+     * Titular del cliente.
+     */
+    private Long titularId; // null si es TITULAR, con ID si es ADHERENTE
 }

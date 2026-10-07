@@ -1,0 +1,457 @@
+### 🏦 API de Servicios Bancarios
+
+API REST desarrollada para la gestión de servicios bancarios, implementando una arquitectura orientada a servicios y aplicando patrones y buenas prácticas de diseño de software.
+
+El proyecto permite gestionar entidades relacionadas con clientes, cuentas financieras y transacciones mediante una API REST, utilizando **DTOs (Data Transfer Objects)** para desacoplar la capa de presentación de la lógica de negocio y de la persistencia de datos.
+
+---
+
+## 📋 Descripción
+
+El sistema representa una API para un servicio bancario capaz de administrar diferentes tipos de cuentas financieras y sus operaciones asociadas.
+
+Entre los principales conceptos implementados se encuentran:
+
+* Gestión de clientes.
+* Gestión de cuentas financieras.
+* Diferentes tipos de cuentas bancarias.
+* Registro y gestión de transacciones.
+* Transferencia de información mediante DTOs.
+* Persistencia de datos en MySQL.
+* Exposición de endpoints REST.
+* Validación y manejo de solicitudes HTTP.
+* Arquitectura orientada a servicios.
+* Contenerización mediante Docker.
+
+El proyecto fue desarrollado utilizando **Java y Spring Boot**, siguiendo principios de programación orientada a objetos, separación de responsabilidades y diseño de aplicaciones empresariales.
+
+---
+
+## 🏗️ Arquitectura
+
+El proyecto utiliza una arquitectura basada en capas, separando las principales responsabilidades de la aplicación:
+
+```text
+┌─────────────────────────────┐
+│          Cliente            │
+│   Postman / Aplicaciones    │
+└──────────────┬──────────────┘
+               │ HTTP / REST
+               ▼
+┌─────────────────────────────┐
+│        Controller           │
+│     Endpoints REST API      │
+└──────────────┬──────────────┘
+               │
+               ▼
+┌─────────────────────────────┐
+│          Service            │
+│       Lógica de negocio     │
+└──────────────┬──────────────┘
+               │
+               ▼
+┌─────────────────────────────┐
+│        Repository           │
+│       Acceso a datos       │
+└──────────────┬──────────────┘
+               │
+               ▼
+┌─────────────────────────────┐
+│           MySQL             │
+│        Base de datos        │
+└─────────────────────────────┘
+```
+
+### DTO — Data Transfer Object
+
+Se utiliza el patrón **DTO** para controlar la información que entra y sale de la API.
+
+Esto permite:
+
+* Evitar exponer directamente las entidades de persistencia.
+* Definir estructuras específicas para las solicitudes y respuestas.
+* Reducir el acoplamiento entre las diferentes capas.
+* Controlar los datos que pueden ser enviados por el cliente.
+* Facilitar la evolución de la API.
+
+Ejemplo conceptual:
+
+```text
+Cliente
+   │
+   ▼
+Request DTO
+   │
+   ▼
+Controller
+   │
+   ▼
+Service
+   │
+   ▼
+Entity
+   │
+   ▼
+Repository
+   │
+   ▼
+MySQL
+```
+
+Para las respuestas se realiza el proceso inverso:
+
+```text
+MySQL
+   │
+   ▼
+Entity
+   │
+   ▼
+Service
+   │
+   ▼
+Response DTO
+   │
+   ▼
+Controller
+   │
+   ▼
+Cliente
+```
+
+---
+
+## 🧩 Modelo de dominio
+
+El sistema contempla principalmente las siguientes entidades:
+
+### Cliente
+
+Representa a los clientes del sistema bancario.
+
+### Cuenta Financiera
+
+Entidad base para las diferentes cuentas disponibles dentro del sistema.
+
+Entre sus posibles atributos se encuentran:
+
+* CBU
+* Alias
+* Saldo
+* Estado
+* Cliente asociado
+
+### Tipos de cuenta
+
+El sistema permite trabajar con diferentes especializaciones de cuentas financieras, por ejemplo:
+
+* Caja de ahorro
+* Cuenta bancaria
+
+La utilización de herencia permite representar las características comunes en una entidad base y las particularidades en sus respectivas subclases.
+
+### Transacciones
+
+Representan las operaciones realizadas sobre las cuentas financieras.
+
+---
+
+## 🛠️ Tecnologías utilizadas
+
+| Tecnología                       | Uso                                          |
+| -------------------------------- | -------------------------------------------- |
+| ☕ **Java**                       | Lenguaje principal                           |
+| 🌱 **Spring Boot**               | Framework para el desarrollo de la API       |
+| 🌐 **Spring Web**                | Implementación de endpoints REST             |
+| 🗃️ **Spring Data JPA**          | Persistencia y acceso a datos                |
+| 🔗 **Jakarta Persistence (JPA)** | Mapeo objeto-relacional                      |
+| ✨ **Lombok**                     | Reducción de código repetitivo               |
+| 🐬 **MySQL**                     | Sistema gestor de base de datos              |
+| 🐳 **Docker**                    | Contenerización de la aplicación y servicios |
+| 📮 **Postman**                   | Pruebas y consumo de la API                  |
+| 🧱 **Maven**                     | Gestión de dependencias y construcción       |
+| 🔀 **Git / GitHub**              | Control de versiones y colaboración          |
+
+---
+
+## 📁 Estructura del proyecto
+
+La estructura general del proyecto sigue una separación por responsabilidades:
+
+```text
+src/
+└── main/
+    ├── java/
+    │   └── .../
+    │       ├── controller/
+    │       ├── service/
+    │       ├── repository/
+    │       ├── model/
+    │       ├── exceptions/
+    │       ├── enums/
+    │       └── dto/
+    │           ├── request/
+    │           └── response/
+    │
+    └── resources/
+        └── application.yml
+```
+
+### `controller`
+
+Contiene los controladores REST encargados de recibir y responder solicitudes HTTP.
+
+### `service`
+
+Contiene la lógica de negocio de la aplicación.
+
+### `repository`
+
+Contiene las interfaces encargadas del acceso y persistencia de datos.
+
+### `entity`
+
+Contiene las entidades que representan el modelo persistente de la aplicación.
+
+### `dto`
+
+Contiene los objetos utilizados para transferir información entre el cliente y la aplicación.
+
+```text
+dto/
+├── request/
+└── response/
+```
+
+Los **Request DTOs** representan los datos recibidos desde el cliente, mientras que los **Response DTOs** representan los datos enviados como respuesta.
+
+---
+
+## 🔌 API REST
+
+La aplicación expone diferentes endpoints HTTP para interactuar con los recursos del sistema.
+
+Ejemplo conceptual:
+
+```http
+GET    /api/clientes
+GET    /api/clientes/{id}
+POST   /api/clientes
+PUT    /api/clientes/{id}
+DELETE /api/clientes/{id}
+```
+
+Para las cuentas:
+
+```http
+GET    /api/cuentas
+GET    /api/cuentas/{id}
+POST   /api/cuentas
+PUT    /api/cuentas/{id}
+DELETE /api/cuentas/{id}
+```
+
+Los endpoints y estructuras definitivas dependen de la implementación actual del proyecto.
+
+---
+
+## 🧪 Pruebas con Postman
+
+La API puede ser probada utilizando **Postman**, permitiendo realizar solicitudes HTTP y verificar las respuestas generadas por el servidor.
+
+Se pueden probar operaciones como:
+
+* `GET` — Obtener información.
+* `POST` — Crear recursos.
+* `PUT` — Modificar recursos.
+* `DELETE` — Eliminar recursos.
+
+Ejemplo de una solicitud:
+
+```http
+POST /api/clientes
+Content-Type: application/json
+```
+
+```json
+{
+    "cuil": "20301234567",
+    "nombre": "Juan",
+    "apellido": "Pérez"
+}
+```
+
+---
+
+## 🐳 Docker
+
+El proyecto incorpora **Docker** para facilitar la configuración y ejecución del entorno.
+
+La utilización de contenedores permite encapsular los servicios necesarios para ejecutar la aplicación y reducir las diferencias entre distintos entornos de desarrollo.
+
+La arquitectura puede representarse de la siguiente manera:
+
+```text
+┌───────────────────────┐
+│      Aplicación       │
+│      Spring Boot      │
+└───────────┬───────────┘
+            │
+            │ JDBC
+            ▼
+┌───────────────────────┐
+│        MySQL          │
+│       Container       │
+└───────────────────────┘
+```
+
+---
+
+## ⚙️ Requisitos
+
+Para ejecutar el proyecto localmente se recomienda contar con:
+
+* **Java JDK**
+* **Maven** o Maven Wrapper (`mvnw` / `mvnw.cmd`)
+* **Docker**
+* **Docker Compose**
+* **MySQL** (si no se utiliza el contenedor correspondiente)
+* **Postman** para realizar pruebas
+
+---
+
+## 🚀 Instalación y ejecución
+
+### 1. Clonar el repositorio
+
+```bash
+git clone <URL_DEL_REPOSITORIO>
+```
+
+Ingresar al directorio:
+
+```bash
+cd <NOMBRE_DEL_PROYECTO>
+```
+
+### 2. Configurar la base de datos
+
+Configurar las propiedades correspondientes en:
+
+```text
+src/main/resources/application.yml
+```
+
+Por ejemplo:
+
+```yaml
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/banco
+    username: root
+    password: ${DB_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+```
+
+> Se recomienda utilizar variables de entorno para información sensible como contraseñas y claves.
+
+### 3. Ejecutar con Maven
+
+En Windows:
+
+```powershell
+.\mvnw.cmd spring-boot:run
+```
+
+En Linux/macOS:
+
+```bash
+./mvnw spring-boot:run
+```
+
+Una vez iniciada la aplicación, la API estará disponible en:
+
+```text
+http://localhost:8080
+```
+
+---
+
+## 🔐 Configuración mediante variables de entorno
+
+Para evitar almacenar credenciales directamente en el código fuente, se pueden utilizar variables de entorno.
+
+Ejemplo:
+
+```text
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=banco
+DB_USERNAME=root
+DB_PASSWORD=********
+```
+
+Esto permite mantener separadas las configuraciones del entorno de desarrollo, pruebas y producción.
+
+---
+
+## 🎯 Objetivos del proyecto
+
+Los principales objetivos son:
+
+1. Desarrollar una API REST para un sistema bancario.
+2. Aplicar principios de programación orientada a objetos.
+3. Implementar una arquitectura organizada por responsabilidades.
+4. Utilizar el patrón **DTO** para la transferencia de datos.
+5. Implementar persistencia mediante **JPA/Hibernate**.
+6. Utilizar **MySQL** como sistema gestor de base de datos.
+7. Implementar y probar endpoints REST.
+8. Utilizar **Docker** para la gestión del entorno.
+9. Aplicar buenas prácticas de desarrollo y diseño de software.
+10. Facilitar el mantenimiento y escalabilidad del sistema.
+
+---
+
+## 📚 Conceptos aplicados
+
+Durante el desarrollo se aplican diferentes conceptos de ingeniería de software:
+
+* Programación Orientada a Objetos.
+* Arquitectura por capas.
+* Arquitectura orientada a servicios.
+* API REST.
+* Patrón DTO.
+* Repository Pattern.
+* Inyección de dependencias.
+* Inversión de control (IoC).
+* Herencia y polimorfismo.
+* ORM.
+* JPA / Hibernate.
+* Persistencia relacional.
+* Separación de responsabilidades.
+* Encapsulamiento.
+* Contenerización.
+* Control de versiones.
+* Pruebas de API.
+
+---
+
+## 👥 Equipo
+
+Proyecto desarrollado como parte de la formación académica en **Ingeniería en Informática**.
+
+**Integrantes:**
+
+* Soliz Mauro Francisco
+* Vazquez Agustina Maité
+
+---
+
+## 📄 Licencia
+
+Este proyecto fue desarrollado con fines académicos y educativos.
+
+Si se desea reutilizar o modificar el proyecto, se recomienda consultar las condiciones establecidas por los autores del repositorio.

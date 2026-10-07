@@ -38,13 +38,21 @@ public class ClienteServiceImpl implements ClienteService {
             throw new RecursoYaExistenteException("Ya existe un cliente registrado con el mismo CUIL o Email.");
         }
 
+        Cliente titular = null;
+        if (request.getTitularId() != null) {
+            titular = clienteRepository.findById(request.getTitularId())
+                    .orElseThrow(() -> new RecursoNoEncontradoException(
+                            "No se encontró el cliente titular con ID: " + request.getTitularId()));
+        }
+
         Cliente cliente = Cliente.builder()
                 .cuil(request.getCuil())
                 .nombre(request.getNombre())
                 .email(request.getEmail())
                 .telefono(request.getTelefono())
                 .direccion(request.getDireccion())
-                .titularidad(request.getTitularidad())
+                .titularidad(request.getTitularidad()) // "TITULAR" o "ADHERENTE"
+                .titular(titular)
                 .build();
 
         Cliente clienteGuardado = clienteRepository.save(cliente);
@@ -118,6 +126,8 @@ public class ClienteServiceImpl implements ClienteService {
                 ? cliente.getCuentaBancaria().stream().map(CuentaBancaria::getId).toList()
                 : Collections.emptyList();
 
+        Long titularId = (cliente.getTitular() != null) ? cliente.getTitular().getId() : null;
+
         return ClienteResponseDTO.builder()
                 .id(cliente.getId())
                 .cuil(cliente.getCuil())
@@ -126,6 +136,7 @@ public class ClienteServiceImpl implements ClienteService {
                 .telefono(cliente.getTelefono())
                 .direccion(cliente.getDireccion())
                 .titularidad(cliente.getTitularidad())
+                .titularId(titularId)
                 .cuentasIds(cuentasIds)
                 .build();
     }
