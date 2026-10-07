@@ -2,9 +2,11 @@ package ar.edu.unju.fi.arquitecturas.tp2daas.service.impl;
 
 import ar.edu.unju.fi.arquitecturas.tp2daas.dto.request.TransaccionRequestDTO;
 import ar.edu.unju.fi.arquitecturas.tp2daas.dto.response.TransaccionResponseDTO;
+import ar.edu.unju.fi.arquitecturas.tp2daas.exceptions.LimiteDiarioExcedidoException;
 import ar.edu.unju.fi.arquitecturas.tp2daas.exceptions.OperacionNoPermitidaException;
 import ar.edu.unju.fi.arquitecturas.tp2daas.exceptions.RecursoNoEncontradoException;
 import ar.edu.unju.fi.arquitecturas.tp2daas.exceptions.SaldoInsuficienteException;
+import ar.edu.unju.fi.arquitecturas.tp2daas.model.Cliente;
 import ar.edu.unju.fi.arquitecturas.tp2daas.model.CuentaBancaria;
 import ar.edu.unju.fi.arquitecturas.tp2daas.model.CuentaCorriente;
 import ar.edu.unju.fi.arquitecturas.tp2daas.enums.EstadoCuenta;
@@ -21,12 +23,18 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Date;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class TransaccionServiceImpl implements TransaccionService {
+
+    // Topes Diarios Globales (ARS/día)
+    private static final double LIMITE_DIARIO_TITULAR = 100000.0;
+    private static final double LIMITE_DIARIO_ADHERENTE = 70000.0;
 
     private final TransaccionRepository transaccionRepository;
     private final CuentaBancariaRepository cuentaBancariaRepository;
@@ -130,6 +138,10 @@ public class TransaccionServiceImpl implements TransaccionService {
     private TransaccionResponseDTO registrarExtraccion(TransaccionRequestDTO request) {
         CuentaBancaria cuenta = obtenerCuentaActivaBloqueada(request.getCbuOrigen());
 
+        // 1. Validar tope diario según titularidad (Titular o Adherente)
+        validarLimiteDiarioExtraccion(cuenta, request.getMonto());
+
+        // 2. Validar fondos disponibles
         validarFondosSuficientes(cuenta, request.getMonto());
 
         cuenta.setSaldo(cuenta.getSaldo() - request.getMonto());
@@ -144,7 +156,7 @@ public class TransaccionServiceImpl implements TransaccionService {
         String cbuOrigen = request.getCbuOrigen();
         String cbuDestino = request.getCbuDestino();
 
-        if (cbuDestino.isBlank() || cbuDestino.isBlank()) {
+        if (cbuDestino == null || cbuDestino.isBlank()) {
             throw new OperacionNoPermitidaException("La cuenta destino es obligatoria para realizar una transferencia.");
         }
         if (cbuOrigen.equals(cbuDestino)) {
@@ -152,17 +164,15 @@ public class TransaccionServiceImpl implements TransaccionService {
         }
 
         CuentaBancaria origen = obtenerCuentaActivaBloqueada(cbuOrigen);
-        CuentaBancaria destino = obtenerCuentaActivaBloqueada(cbuDestino);
 
-        /*
-        if (cbuOrigen.compareToFoldCase(cbuDestino) > 0) {
-            origen = obtenerCuentaActivaBloqueada(cbuOrigen);
-            destino = obtenerCuentaActivaBloqueada(cbuDestino);
-        } else {
-            destino = obtenerCuentaActivaBloqueada(cbuDestino);
-            origen = obtenerCuentaActivaBloqueada(cbuOrigen);
+        // Operatividad: Los adherentes no pueden transferir (solo extracciones)
+        Cliente cliente = origen.getCliente();
+        if (cliente != null && "ADHERENTE".equalsIgnoreCase(cliente.getTitularidad())) {
+            throw new OperacionNoPermitidaException(
+                    "Operación no permitida: Los adherentes solo pueden realizar extracciones.");
         }
-         */
+
+        CuentaBancaria destino = obtenerCuentaActivaBloqueada(cbuDestino);
 
         validarFondosSuficientes(origen, request.getMonto());
 
@@ -182,6 +192,37 @@ public class TransaccionServiceImpl implements TransaccionService {
     // ==========================================
     // Métodos auxiliares y validaciones
     // ==========================================
+
+    private void validarLimiteDiarioExtraccion(CuentaBancaria cuenta, double montoAExtraer) {
+        Cliente cliente = cuenta.getCliente();
+        boolean esAdherente = cliente != null && "ADHERENTE".equalsIgnoreCase(cliente.getTitularidad());
+        double limiteDiario = esAdherente ? LIMITE_DIARIO_ADHERENTE : LIMITE_DIARIO_TITULAR;
+
+        // Rango de fechas del día en curso (00:00:00 a 23:59:59)
+        LocalDate hoy = LocalDate.now();
+        Date inicioDia = Date.from(hoy.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        Date finDia = Date.from(hoy.plusDays(1).atStartOfDay(ZoneId.systemDefault()).minusNanos(1).toInstant());
+
+        Double acumuladoHoy = transaccionRepository.sumMontoPorCuentaTipoYFecha(
+                cuenta.getId(),
+                TipoTransaccion.EXTRACCION,
+                EstadoTransaccion.COMPLETADA,
+                inicioDia,
+                finDia
+        );
+
+        if (acumuladoHoy == null) {
+            acumuladoHoy = 0.0;
+        }
+
+        if (acumuladoHoy + montoAExtraer > limiteDiario) {
+            log.warn("Límite diario superado para cuenta {}. Acumulado: {}, solicitado: {}, tope: {}",
+                    cuenta.getId(), acumuladoHoy, montoAExtraer, limiteDiario);
+            throw new LimiteDiarioExcedidoException(
+                    "Operación rechazada: La extracción supera el límite diario acumulado permitido de $"
+                            + limiteDiario + " ARS (acumulado actual: $" + acumuladoHoy + " ARS).");
+        }
+    }
 
     private void validarDatosTransaccion(TransaccionRequestDTO request) {
         if (request.getCbuOrigen() == null) {
