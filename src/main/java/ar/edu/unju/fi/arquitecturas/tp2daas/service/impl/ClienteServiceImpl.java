@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +27,7 @@ import java.util.List;
 public class ClienteServiceImpl implements ClienteService {
 
     private final ClienteRepository clienteRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -45,6 +47,8 @@ public class ClienteServiceImpl implements ClienteService {
                             "No se encontró el cliente titular con ID: " + request.getTitularId()));
         }
 
+        String token = UUID.randomUUID().toString();
+
         Cliente cliente = Cliente.builder()
                 .cuil(request.getCuil())
                 .nombre(request.getNombre())
@@ -53,11 +57,44 @@ public class ClienteServiceImpl implements ClienteService {
                 .direccion(request.getDireccion())
                 .titularidad(request.getTitularidad()) // "TITULAR" o "ADHERENTE"
                 .titular(titular)
+                .estado(EstadoCliente.PENDIENTE_ACTIVACION)
+                .tokenActivacion(token)
+                .fechaExpiracionToken(LocalDateTime.now().plusHours(24))
                 .build();
 
         Cliente clienteGuardado = clienteRepository.save(cliente);
+
+        // Publicación del evento asíncrono
+        eventPublisher.publishEvent(new ClienteCreadoEvent(
+                this,
+                clienteGuardado.getEmail(),
+                clienteGuardado.getNombre(),
+                token
+        ));
         log.info("Cliente registrado exitosamente con ID: {}", clienteGuardado.getId());
         return toResponse(clienteGuardado);
+    }
+
+    @Override
+    @Transactional
+    public void activarCliente(String token) {
+        if (token == null || token.isBlank()) {
+            throw new IllegalArgumentException("El token de activación no puede ser nulo o vacío.");
+        }
+
+        Cliente cliente = clienteRepository.findByTokenActivacion(token)
+                .orElseThrow(() -> new IllegalArgumentException("Token de activación inválido o inexistente."));
+
+        if (cliente.getFechaExpiracionToken().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("El token de activación ha expirado. Validez máxima: 24 horas.");
+        }
+
+        cliente.setEstado(EstadoCliente.ACTIVO);
+        cliente.setTokenActivacion(null);
+        cliente.setFechaExpiracionToken(null);
+        clienteRepository.save(cliente);
+
+        log.info("Cliente ID {} activado correctamente.", cliente.getId());
     }
 
     @Override
@@ -139,73 +176,5 @@ public class ClienteServiceImpl implements ClienteService {
                 .titularId(titularId)
                 .cuentasIds(cuentasIds)
                 .build();
-    }
-
-    private final ApplicationEventPublisher eventPublisher;
-
-    @Override
-    @Transactional
-    public ClienteResponseDTO crearCliente(ClienteRequestDTO request) {
-        log.info("Iniciando proceso de creación de cliente con CUIL: {}", request.getCuil());
-
-        if (clienteRepository.existsByCuilOrEmail(request.getCuil(), request.getEmail())) {
-            throw new RecursoYaExistenteException("Ya existe un cliente registrado con el mismo CUIL o Email.");
-        }
-
-        Cliente titular = null;
-        if (request.getTitularId() != null) {
-            titular = clienteRepository.findById(request.getTitularId())
-                    .orElseThrow(() -> new RecursoNoEncontradoException(
-                            "No se encontró el cliente titular con ID: " + request.getTitularId()));
-        }
-
-        String token = UUID.randomUUID().toString();
-
-        Cliente cliente = Cliente.builder()
-                .cuil(request.getCuil())
-                .nombre(request.getNombre())
-                .email(request.getEmail())
-                .telefono(request.getTelefono())
-                .direccion(request.getDireccion())
-                .titularidad(request.getTitularidad())
-                .titular(titular)
-                .estado(EstadoCliente.PENDIENTE_ACTIVACION)
-                .tokenActivacion(token)
-                .fechaExpiracionToken(LocalDateTime.now().plusHours(24))
-                .build();
-
-        Cliente clienteGuardado = clienteRepository.save(cliente);
-
-        // Publicación del evento asíncrono
-        eventPublisher.publishEvent(new ClienteCreadoEvent(
-                this,
-                clienteGuardado.getEmail(),
-                clienteGuardado.getNombre(),
-                token
-        ));
-
-        return toResponse(clienteGuardado);
-    }
-
-    @Override
-    @Transactional
-    public void activarCliente(String token) {
-        if (token == null || token.isBlank()) {
-            throw new IllegalArgumentException("El token de activación no puede ser nulo o vacío.");
-        }
-
-        Cliente cliente = clienteRepository.findByTokenActivacion(token)
-                .orElseThrow(() -> new IllegalArgumentException("Token de activación inválido o inexistente."));
-
-        if (cliente.getFechaExpiracionToken().isBefore(LocalDateTime.now())) {
-            throw new IllegalArgumentException("El token de activación ha expirado. Validez máxima: 24 horas.");
-        }
-
-        cliente.setEstado(EstadoCliente.ACTIVO);
-        cliente.setTokenActivacion(null);
-        cliente.setFechaExpiracionToken(null);
-        clienteRepository.save(cliente);
-
-        log.info("Cliente ID {} activado correctamente.", cliente.getId());
     }
 }
