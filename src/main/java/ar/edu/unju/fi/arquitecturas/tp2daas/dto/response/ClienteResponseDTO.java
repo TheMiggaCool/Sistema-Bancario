@@ -53,6 +53,11 @@ public class ClienteResponseDTO {
     private String titularidad;
 
     /**
+     * Identificador del titular si es que posee.
+     */
+    private Long titularId;
+
+    /**
      * Identificadores de las cuentas bancarias de las que el cliente es titular;
      * vacía si no posee ninguna.
      */
