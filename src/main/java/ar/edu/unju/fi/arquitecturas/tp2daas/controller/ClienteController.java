@@ -2,7 +2,7 @@ package ar.edu.unju.fi.arquitecturas.tp2daas.controller;
 
 import ar.edu.unju.fi.arquitecturas.tp2daas.dto.request.ClienteRequestDTO;
 import ar.edu.unju.fi.arquitecturas.tp2daas.dto.response.ClienteResponseDTO;
-import ar.edu.unju.fi.arquitecturas.tp2daas.service.ClienteService;
+import ar.edu.unju.fi.arquitecturas.tp2daas.service.impl.ClienteServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class ClienteController {
 
-    private final ClienteService clienteService;
+    private final ClienteServiceImpl clienteService;
 
     @PostMapping
     public ResponseEntity<ClienteResponseDTO> crearCliente(@Valid @RequestBody ClienteRequestDTO request) {
