@@ -135,4 +135,11 @@ public interface CuentaBancariaRepository extends JpaRepository<CuentaBancaria, 
      */
     @Query("SELECT c FROM CuentaBancaria c LEFT JOIN FETCH c.transacciones WHERE c.CBU = :CBU")
     Optional<CuentaBancaria> findByCBUWithTransacciones(@Param("cbu") String CBU);
+
+    /**
+     * Obtiene únicamente los identificadores de las cuentas en un estado dado.
+     * Se usa en procesos masivos para no cargar todas las entidades en memoria.
+     */
+    @Query("SELECT c.id FROM CuentaBancaria c WHERE c.estado = :estado")
+    List<Long> findIdsByEstado(@Param("estado") EstadoCuenta estado);
 }

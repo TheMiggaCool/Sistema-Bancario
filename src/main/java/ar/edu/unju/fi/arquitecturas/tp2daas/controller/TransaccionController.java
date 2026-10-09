@@ -2,7 +2,7 @@ package ar.edu.unju.fi.arquitecturas.tp2daas.controller;
 
 import ar.edu.unju.fi.arquitecturas.tp2daas.dto.request.TransaccionRequestDTO;
 import ar.edu.unju.fi.arquitecturas.tp2daas.dto.response.TransaccionResponseDTO;
-import ar.edu.unju.fi.arquitecturas.tp2daas.service.TransaccionService;
+import ar.edu.unju.fi.arquitecturas.tp2daas.service.impl.TransaccionServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class TransaccionController {
 
-    private final TransaccionService transaccionService;
+    private final TransaccionServiceImpl transaccionService;
 
     @PostMapping("/transferir")
     public ResponseEntity<TransaccionResponseDTO> transferir(@Valid @RequestBody TransaccionRequestDTO request) {

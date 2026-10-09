@@ -21,3 +21,11 @@ spring:
   sql:
     init:
       mode: always # Mantiene la ejecución de data.sql al iniciar
+
+  comisiones:
+    cuenta-corriente: 5000.00
+    caja-ahorro: 2000.00
+    # Segundos Minutos Horas DíaMes Mes DíaSemana -> día 1 de cada mes a las 00:00
+    cron: "0 0 0 1 * *"
+    # Para pruebas, cada minuto: cron: "0 * * * * *"
+    zone: America/Argentina/Jujuy

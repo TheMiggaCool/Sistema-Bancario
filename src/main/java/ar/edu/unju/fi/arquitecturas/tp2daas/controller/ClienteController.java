@@ -17,7 +17,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ClienteController {
 
-    private final ClienteService clienteService;
+    private final ClienteServiceImpl clienteService;
 
     @PostMapping
     public ResponseEntity<ClienteResponseDTO> crearCliente(@Valid @RequestBody ClienteRequestDTO request) {

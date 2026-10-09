@@ -53,6 +53,8 @@ public class TransaccionServiceImpl implements TransaccionService {
             case TRANSFERENCIA_ENVIADA -> registrarTransferencia(request);
             case TRANSFERENCIA_RECIBIDA -> throw new OperacionNoPermitidaException(
                     "Las transferencias recibidas se generan automáticamente al procesar una transferencia enviada.");
+            case DEBITO_COMISION -> throw new OperacionNoPermitidaException(
+                    "Los débitos por comisión se generan automáticamente en la liquidación mensual.");
         };
     }
 
@@ -171,6 +173,7 @@ public class TransaccionServiceImpl implements TransaccionService {
             throw new OperacionNoPermitidaException(
                     "Operación no permitida: Los adherentes solo pueden realizar extracciones.");
         }
+         */
 
         CuentaBancaria destino = obtenerCuentaActivaBloqueada(cbuDestino);
 
