@@ -95,4 +95,33 @@ public interface TransaccionRepository extends JpaRepository<Transaccion, Long> 
             "JOIN FETCH c.cliente " +
             "WHERE t.id = :id")
     Optional<Transaccion> findByIdWithCuentaAndCliente(@Param("id") Long id);
+
+
+    // ==========================================
+    // Acumulados y Topes Diarios (Reglas de Negocio)
+    // ==========================================
+
+    /**
+     * Calcula la suma acumulada del monto de transacciones para una cuenta, tipo y estado
+     * dentro de un rango temporal (por ejemplo, el día en curso para límites de extracción).
+     *
+     * @param cuentaId Identificador único de la cuenta bancaria.
+     * @param tipo     Tipo de transacción (ej. EXTRACCION).
+     * @param estado   Estado de la transacción (ej. COMPLETADA).
+     * @param inicioDia Timestamp inicial del período.
+     * @param finDia   Timestamp final del período.
+     * @return Total acumulado, o 0.0 si no se registraron operaciones.
+     * El uso de COALESCE(SUM(t.monto), 0.0) es clave porque evita que la base de datos retorne null si en ese día todavía no se realizó ninguna extracción, asegurando que siempre devuelva 0.0.
+     */
+    @Query("SELECT COALESCE(SUM(t.monto), 0.0) FROM Transaccion t " +
+            "WHERE t.cuentaBancaria.id = :cuentaId " +
+            "AND t.tipo = :tipo " +
+            "AND t.estado = :estado " +
+            "AND t.fecha >= :inicioDia AND t.fecha <= :finDia")
+    Double sumMontoPorCuentaTipoYFecha(
+            @Param("cuentaId") Long cuentaId,
+            @Param("tipo") TipoTransaccion tipo,
+            @Param("estado") EstadoTransaccion estado,
+            @Param("inicioDia") Date inicioDia,
+            @Param("finDia") Date finDia);
 }

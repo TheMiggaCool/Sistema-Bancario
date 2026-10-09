@@ -82,4 +82,6 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
      */
     @Query("SELECT DISTINCT c FROM Cliente c LEFT JOIN FETCH c.cuentaBancaria")
     List<Cliente> findAllWithCuentas();
+
+    Optional<Cliente> findByTokenActivacion(String tokenActivacion);
 }
