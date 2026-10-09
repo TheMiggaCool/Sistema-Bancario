@@ -52,7 +52,7 @@ El proyecto utiliza una arquitectura basada en capas, separando las principales 
                ▼
 ┌─────────────────────────────┐
 │        Repository           │
-│       Acceso a datos       │
+│       Acceso a datos        │
 └──────────────┬──────────────┘
                │
                ▼
