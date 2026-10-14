@@ -2,7 +2,7 @@ package ar.edu.unju.fi.arquitecturas.tp2daas.controller;
 
 import ar.edu.unju.fi.arquitecturas.tp2daas.dto.request.ClienteRequestDTO;
 import ar.edu.unju.fi.arquitecturas.tp2daas.dto.response.ClienteResponseDTO;
-import ar.edu.unju.fi.arquitecturas.tp2daas.service.interfaces.ClienteService;
+import ar.edu.unju.fi.arquitecturas.tp2daas.service.impl.ClienteServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

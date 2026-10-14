@@ -173,7 +173,7 @@ public class TransaccionServiceImpl implements TransaccionService {
             throw new OperacionNoPermitidaException(
                     "Operación no permitida: Los adherentes solo pueden realizar extracciones.");
         }
-         */
+
 
         CuentaBancaria destino = obtenerCuentaActivaBloqueada(cbuDestino);
 
