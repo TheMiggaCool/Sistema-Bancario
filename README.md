@@ -94,6 +94,3 @@ No se deben guardar claves, contraseñas ni otros secretos directamente en el re
 
 Las mejoras, correcciones y sugerencias son bienvenidas. Antes de proponer cambios en contenido sanitario, se recomienda verificar la información con fuentes oficiales y profesionales cualificados.
 
-## Licencia
-
-No se ha especificado una licencia en este README. Si el proyecto se publica para reutilización, se recomienda añadir un archivo `LICENSE` con la licencia elegida.
