@@ -183,12 +183,18 @@ src/
 └── main/
     ├── java/
     │   └── .../
+    │       ├── config/
+    │       ├── listener/
+    │       ├── scheduler/
     │       ├── controller/
     │       ├── service/
+    │           ├── interfaces/
+    │           └── impl/      
     │       ├── repository/
     │       ├── model/
     │       ├── exceptions/
     │       ├── enums/
+    │       ├── events/
     │       └── dto/
     │           ├── request/
     │           └── response/
@@ -196,6 +202,37 @@ src/
     └── resources/
         └── application.yml
 ```
+### `config`
+
+Contiene las clases de configuración de la aplicación, incluyendo la definición de beans y los ajustes de componentes y servicios.
+
+### `listener`
+
+Contiene los componentes encargados de escuchar y procesar eventos o notificaciones generados por la aplicación.
+
+### `scheduler`
+
+Contiene las tareas programadas que se ejecutan automáticamente según intervalos o expresiones temporales definidas.
+
+### `service/interfaces`
+
+Contiene las interfaces que definen los contratos de los servicios y las operaciones disponibles en la capa de negocio.
+
+### `service/impl`
+
+Contiene las implementaciones concretas de las interfaces de servicio, donde se desarrolla la lógica de negocio.
+
+### `exceptions`
+
+Contiene las excepciones personalizadas utilizadas para representar y gestionar errores específicos de la aplicación.
+
+### `enums`
+
+Contiene las enumeraciones que definen conjuntos de valores constantes utilizados en distintos componentes del sistema.
+
+### `events`
+
+Contiene las clases que representan los eventos internos de la aplicación, utilizados para comunicar cambios o acciones entre componentes.
 
 ### `controller`
 
