@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 public class LiquidacionComisionesScheduler {
     private final ComisionService comisionService;
 
-    // Programado para realizar la liquidación día 1 del mes, a horas 00:00
+    // Programado para realizar la liquidación el día 1 de cada mes, a horas 00:00
     @Scheduled(cron = "${app.comisiones.cron:0 0 0 1 * *}",
             zone = "${app.comisiones.zone:America/Argentina/Jujuy}")
     public void ejecutarLiquidacionMensual() {

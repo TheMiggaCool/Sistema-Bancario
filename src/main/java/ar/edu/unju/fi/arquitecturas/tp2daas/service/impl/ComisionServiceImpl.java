@@ -23,7 +23,6 @@ public class ComisionServiceImpl implements ComisionService {
         COBRADA, RECHAZADA, OMITIDA
     }
 
-
     private record ResultadoCobro(EstadoCobro estado, double monto) {
         static ResultadoCobro omitida() {
             return new ResultadoCobro(EstadoCobro.OMITIDA, 0.0);
@@ -35,6 +34,7 @@ public class ComisionServiceImpl implements ComisionService {
     private final ComisionesProperties comisiones;
     private final TransactionTemplate transactionTemplate;
 
+    // Constructor
     public ComisionServiceImpl(CuentaBancariaRepository cuentaBancariaRepository,
                                TransaccionRepository transaccionRepository,
                                ComisionesProperties comisiones,
@@ -48,6 +48,7 @@ public class ComisionServiceImpl implements ComisionService {
     // Sin @Transactional a propósito: cada cuenta abre/cierra su propia transacción.
     @Override
     public ResumenLiquidacionDTO liquidarComisionesMensuales() {
+        // Listamos las cuentas activas
         List<Long> cuentasIds = cuentaBancariaRepository.findIdsByEstado(EstadoCuenta.ACTIVA);
         log.info("Liquidación de comisiones: {} cuentas ACTIVAS a evaluar", cuentasIds.size());
 
@@ -56,6 +57,8 @@ public class ComisionServiceImpl implements ComisionService {
 
         for (Long cuentaId : cuentasIds) {
             try {
+                // El uso de @Transaccional podría provocar que un fallo revierta también
+                // los cobros anteriores que no se hubieran confirmado.
                 ResultadoCobro resultado = transactionTemplate.execute(status -> cobrarComision(cuentaId));
                 switch (resultado.estado()) {
                     case COBRADA -> { cobradas++; total += resultado.monto(); }
