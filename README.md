@@ -184,47 +184,39 @@ src/
     ├── java/
     │   └── .../
     │       ├── config/
-    │       ├── listener/
-    │       ├── scheduler/
     │       ├── controller/
-    │       ├── service/
-    │           ├── interfaces/
-    │           └── impl/      
-    │       ├── repository/
-    │       ├── model/
-    │       ├── exceptions/
+    │       ├── dto/
+    │       │   ├── request/
+    │       │   └── response/
     │       ├── enums/
     │       ├── events/
-    │       └── dto/
-    │           ├── request/
-    │           └── response/
+    │       ├── exceptions/
+    │       ├── listener/
+    │       ├── model/
+    │       ├── repository/
+    │       ├── scheduler/
+    │       └── service/
+    │           ├── impl/
+    │           └── interfaces/
     │
     └── resources/
         └── application.yml
 ```
+
 ### `config`
 
 Contiene las clases de configuración de la aplicación, incluyendo la definición de beans y los ajustes de componentes y servicios.
 
-### `listener`
+### `controller`
 
-Contiene los componentes encargados de escuchar y procesar eventos o notificaciones generados por la aplicación.
+Contiene los controladores REST encargados de recibir y responder solicitudes HTTP.
 
-### `scheduler`
+### `dto`
 
-Contiene las tareas programadas que se ejecutan automáticamente según intervalos o expresiones temporales definidas.
+Contiene los objetos utilizados para transferir información entre el cliente y la aplicación.
 
-### `service/interfaces`
-
-Contiene las interfaces que definen los contratos de los servicios y las operaciones disponibles en la capa de negocio.
-
-### `service/impl`
-
-Contiene las implementaciones concretas de las interfaces de servicio, donde se desarrolla la lógica de negocio.
-
-### `exceptions`
-
-Contiene las excepciones personalizadas utilizadas para representar y gestionar errores específicos de la aplicación.
+- **`request/`**: contiene los DTOs que representan los datos recibidos desde el cliente.
+- **`response/`**: contiene los DTOs que representan los datos enviados como respuesta al cliente.
 
 ### `enums`
 
@@ -234,35 +226,36 @@ Contiene las enumeraciones que definen conjuntos de valores constantes utilizado
 
 Contiene las clases que representan los eventos internos de la aplicación, utilizados para comunicar cambios o acciones entre componentes.
 
-### `controller`
+### `exceptions`
 
-Contiene los controladores REST encargados de recibir y responder solicitudes HTTP.
+Contiene las excepciones personalizadas utilizadas para representar y gestionar errores específicos de la aplicación.
 
-### `service`
+### `listener`
 
-Contiene la lógica de negocio de la aplicación.
+Contiene los componentes encargados de escuchar y procesar eventos o notificaciones generados por la aplicación.
+
+### `model`
+
+Contiene las clases que representan el modelo de datos de la aplicación, incluidas las entidades que corresponden al modelo persistente.
 
 ### `repository`
 
-Contiene las interfaces encargadas del acceso y persistencia de datos.
+Contiene las interfaces encargadas del acceso y la persistencia de datos.
 
-### `entity`
+### `scheduler`
 
-Contiene las entidades que representan el modelo persistente de la aplicación.
+Contiene las tareas programadas que se ejecutan automáticamente según intervalos o expresiones temporales definidas.
 
-### `dto`
+### `service`
 
-Contiene los objetos utilizados para transferir información entre el cliente y la aplicación.
+Contiene la lógica de negocio de la aplicación y define las operaciones disponibles a través de sus interfaces e implementaciones.
 
-```text
-dto/
-├── request/
-└── response/
-```
+- **`impl/`**: contiene las implementaciones concretas de las interfaces de servicio, donde se desarrolla la lógica de negocio.
+- **`interfaces/`**: contiene las interfaces que definen los contratos de los servicios y las operaciones disponibles en la capa de negocio.
 
-Los **Request DTOs** representan los datos recibidos desde el cliente, mientras que los **Response DTOs** representan los datos enviados como respuesta.
+### `resources`
 
----
+Contiene los recursos y archivos de configuración de la aplicación, como `application.yml`, donde se definen propiedades y parámetros de ejecución.
 
 ## 🔌 API REST
 
