@@ -9,7 +9,6 @@ public interface ComisionService {
     /**
      * Recorre las cuentas ACTIVAS y registra un {@code DEBITO_COMISION} por el importe fijo
      * configurado según el tipo de cuenta. Cada cuenta se procesa en su propia transacción.
-     *
      * @return Resumen de la ejecución.
      */
     ResumenLiquidacionDTO liquidarComisionesMensuales();

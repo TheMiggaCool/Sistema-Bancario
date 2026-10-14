@@ -174,7 +174,6 @@ public class TransaccionServiceImpl implements TransaccionService {
                     "Operación no permitida: Los adherentes solo pueden realizar extracciones.");
         }
 
-
         CuentaBancaria destino = obtenerCuentaActivaBloqueada(cbuDestino);
 
         validarFondosSuficientes(origen, request.getMonto());
